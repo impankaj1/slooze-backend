@@ -3,8 +3,10 @@ import userController from "../controllers/UserController";
 
 const userRouter = Router();
 
-userRouter.get("/:id", userController.getUserDetails);
-userRouter.put("/:id", userController.updateUserDetails);
-userRouter.delete("/:id", userController.deleteUser);
+userRouter
+  .route("/:id")
+  .get(userController.getUserDetails)
+  .put(userController.updateUserDetails)
+  .delete(userController.deleteUser);
 
 export default userRouter;

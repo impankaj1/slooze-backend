@@ -1,7 +1,9 @@
-import { Order, OrderStatus } from "./../models/Order";
-import { OrderCreateDTO, OrderUpdateDTO } from "../models/Order";
-
-import OrderModel from "../models/Order";
+import OrderModel, {
+  Order,
+  OrderCreateDTO,
+  OrderStatus,
+} from "../models/Order";
+import { Cart } from "../models/Cart";
 
 class OrderService {
   public static _instance: OrderService;
@@ -13,71 +15,55 @@ class OrderService {
     return OrderService._instance;
   }
 
-  public async createOrder(payload: OrderCreateDTO) {
-    const order = await OrderModel.create(payload);
-    return order.toObject();
+  public async createOrder(cart: Cart, userId: string): Promise<Order> {
+    const orderData: OrderCreateDTO = {
+      items: cart.items,
+      totalPrice: cart.totalPrice,
+      status: OrderStatus.PENDING,
+    };
+
+    const order = await OrderModel.create({
+      ...orderData,
+      userId,
+    });
+
+    return order;
   }
 
-  public async getOrders(): Promise<Order[]> {
-    const orders = await OrderModel.find();
-    return orders.map((order) => order.toObject());
-  }
-
-  public async getOrderById(id: string): Promise<Order | null> {
+  public async getOrder(id: string): Promise<Order | null> {
     const order = await OrderModel.findById(id);
-    return order ? order.toObject() : null;
+    return order;
   }
 
   public async getOrdersByUserId(userId: string): Promise<Order[]> {
     const orders = await OrderModel.find({ userId });
-    return orders.map((order) => order.toObject());
-  }
-
-  public async updateOrder(
-    order: Order,
-    payload: OrderUpdateDTO
-  ): Promise<Order | null> {
-    const updatedOrder = await OrderModel.findByIdAndUpdate(
-      order._id,
-      payload,
-      {
-        new: true,
-      }
-    );
-    return updatedOrder ? updatedOrder.toObject() : null;
-  }
-
-  public async deleteOrder(id: string): Promise<boolean> {
-    const deletedOrder = await OrderModel.findByIdAndDelete(id);
-    return deletedOrder !== null;
-  }
-
-  public async getOrderStatus(id: string): Promise<string | null> {
-    const order = await OrderModel.findById(id);
-    return order?.status ?? null;
+    return orders;
   }
 
   public async updateOrderStatus(
     id: string,
-    status: string
+    status: OrderStatus
   ): Promise<Order | null> {
     const order = await OrderModel.findByIdAndUpdate(
       id,
       { status },
-      {
-        new: true,
-      }
+      { new: true }
     );
-    return order ? order.toObject() : null;
+    return order;
   }
 
   public async cancelOrder(id: string): Promise<Order | null> {
-    const order = await OrderModel.findByIdAndUpdate(
-      id,
-      { status: OrderStatus.CANCELLED },
-      { new: true }
-    );
-    return order ? order.toObject() : null;
+    const order = await OrderModel.findById(id);
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    if (order.status === OrderStatus.COMPLETED) {
+      throw new Error("Cannot cancel a completed order");
+    }
+
+    order.status = OrderStatus.CANCELLED;
+    return order.save();
   }
 }
 

@@ -2,6 +2,7 @@ import MenuItemModel, { MenuItem } from "./MenuItems";
 import mongoose, { Types } from "mongoose";
 import { OrderCreateSchema } from "../validators/OrderValidator";
 import z from "zod";
+import { CartItem } from "./Cart";
 
 export enum OrderStatus {
   PENDING = "pending",
@@ -9,31 +10,43 @@ export enum OrderStatus {
   CANCELLED = "cancelled",
 }
 
+// Schema for storing cart items in orders
+const OrderItemSchema = new mongoose.Schema({
+  menuItem: {
+    _id: { type: mongoose.Schema.Types.ObjectId, required: true },
+    name: { type: String, required: true },
+    price: { type: Number, required: true },
+    description: { type: String, required: true },
+    restaurantId: { type: String, required: true },
+    createdAt: { type: Date, required: true },
+    updatedAt: { type: Date, required: true },
+  },
+  quantity: { type: Number, required: true, min: 1 },
+  restaurantId: { type: String, required: true },
+  itemTotalPrice: { type: Number, required: true, min: 0 },
+});
+
 export interface Order {
   _id: Types.ObjectId;
-  restaurantId: string;
   userId: string;
-  menuItemIds: string[];
+  items: CartItem[];
   totalPrice: number;
-  status: string;
+  status: OrderStatus;
   createdAt: Date;
   updatedAt: Date;
-  paymentId: string;
 }
 
 const orderModel = new mongoose.Schema(
   {
-    restaurantId: { type: String, required: true },
     userId: { type: String, required: true },
-    menuItemIds: { type: [String], required: true },
+    items: { type: [OrderItemSchema], required: true },
     totalPrice: { type: Number, required: true },
-    status: { type: String, enum: OrderStatus, required: true },
-    paymentId: { type: String, required: true },
+    status: { type: String, enum: Object.values(OrderStatus), required: true },
   },
   { timestamps: true }
 );
 
-const OrderModel = mongoose.model("Order", orderModel);
+const OrderModel = mongoose.model<Order>("Order", orderModel);
 
 export default OrderModel;
 

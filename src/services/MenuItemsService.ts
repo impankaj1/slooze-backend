@@ -16,12 +16,19 @@ class MenuItemsService {
     return menuItems.toObject();
   }
 
+  public async getMenuItemsByRestaurantId(
+    restaurantId: string
+  ): Promise<MenuItem[]> {
+    const menuItems = await MenuItemModel.find({ restaurantId });
+    return menuItems.map((menuItem) => menuItem.toObject());
+  }
+
   public async getMenuItems(): Promise<MenuItem[]> {
     const menuItems = await MenuItemModel.find();
     return menuItems.map((menuItem) => menuItem.toObject());
   }
 
-  public async getMenuItemsById(id: string): Promise<MenuItem | null> {
+  public async getMenuItemById(id: string): Promise<MenuItem | null> {
     const menuItem = await MenuItemModel.findById(id);
     return menuItem ? menuItem.toObject() : null;
   }

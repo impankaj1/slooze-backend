@@ -6,6 +6,7 @@ import {
 } from "../validators/MenuValidator";
 import { ZodError } from "zod";
 import { MenuItemCreateDTO, MenuItemUpdateDTO } from "../models/MenuItems";
+import RestaurantService from "../services/RestaurantService";
 
 class MenuItemsController {
   private static _instance: MenuItemsController;
@@ -18,7 +19,16 @@ class MenuItemsController {
   }
 
   public async createMenuItems(req: Request, res: Response): Promise<any> {
-    let data: MenuItemCreateDTO = req.body;
+    const { restaurantId } = req.params;
+    if (!restaurantId) {
+      return res.status(400).json({ message: "Restaurant ID is required" });
+    }
+    const restaurant = await RestaurantService.getRestaurantById(restaurantId);
+    if (!restaurant) {
+      return res.status(404).json({ message: "Restaurant not found" });
+    }
+
+    let data: MenuItemCreateDTO = { ...req.body, restaurantId };
 
     try {
       data = MenuItemCreateSchema.parse(data);
@@ -35,6 +45,20 @@ class MenuItemsController {
     return res.status(200).json(menuItems);
   }
 
+  public async getMenuItemsByRestaurantId(
+    req: Request,
+    res: Response
+  ): Promise<any> {
+    const { restaurantId } = req.params;
+    if (!restaurantId) {
+      return res.status(400).json({ message: "Restaurant ID is required" });
+    }
+    const menuItems = await MenuItemsService.getMenuItemsByRestaurantId(
+      restaurantId
+    );
+    return res.status(200).json(menuItems);
+  }
+
   public async getMenuItems(req: Request, res: Response): Promise<any> {
     const menuItems = await MenuItemsService.getMenuItems();
     return res.status(200).json(menuItems);
@@ -45,7 +69,7 @@ class MenuItemsController {
     if (!id) {
       return res.status(400).json({ message: "Menu item ID is required" });
     }
-    const menuItem = await MenuItemsService.getMenuItemsById(id);
+    const menuItem = await MenuItemsService.getMenuItemById(id);
     if (!menuItem) {
       return res.status(404).json({ message: "Menu item not found" });
     }
@@ -58,6 +82,7 @@ class MenuItemsController {
     if (!id) {
       return res.status(400).json({ message: "Menu item ID is required" });
     }
+    const user = req.user;
     try {
       data = MenuItemUpdateSchema.parse(data);
     } catch (error) {
@@ -68,7 +93,7 @@ class MenuItemsController {
       }
       return res.status(500).json({ message: "Internal server error" });
     }
-    const menuItem = await MenuItemsService.getMenuItemsById(id);
+    const menuItem = await MenuItemsService.getMenuItemById(id);
     if (!menuItem) {
       return res.status(404).json({ message: "Menu item not found" });
     }
@@ -92,7 +117,7 @@ class MenuItemsController {
       return res.status(400).json({ message: "Menu item ID is required" });
     }
 
-    const menuItem = await MenuItemsService.getMenuItemsById(id);
+    const menuItem = await MenuItemsService.getMenuItemById(id);
     if (!menuItem) {
       return res.status(404).json({ message: "Menu item not found" });
     }

@@ -10,6 +10,8 @@ import restaurantRouter from "./routes/RestaurantRoutes";
 import authMiddleware from "./middleware";
 import menuItemRouter from "./routes/MenuItem";
 import orderRouter from "./routes/OrderRoutes";
+import cartRouter from "./routes/cartRoutes";
+import paymentRouter from "./routes/PaymentRoutes";
 const app = express();
 
 app.use(express.json());
@@ -33,10 +35,12 @@ app.use(
 );
 
 app.use("/auth", authRouter);
-app.use("/restaurants", authMiddleware, restaurantRouter);
+app.use("/restaurants", restaurantRouter);
 app.use("/users", authMiddleware, userRouter);
-app.use("/menu-items", authMiddleware, menuItemRouter);
+app.use("/menu-items", menuItemRouter);
 app.use("/orders", authMiddleware, orderRouter);
+app.use("/cart", authMiddleware, cartRouter);
+app.use("/payments", paymentRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World ");

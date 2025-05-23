@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { Role } from "../models/User";
-
 export const SignupSchema = z.object({
   name: z
     .string({ message: "Please enter your name" })

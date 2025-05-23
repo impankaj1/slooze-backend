@@ -1,13 +1,18 @@
 import { Router } from "express";
 import RestaurantController from "../controllers/RestaurantController";
+import authMiddleware from "../middleware";
 
 const restaurantRouter = Router();
 
-restaurantRouter.post("/", RestaurantController.getRestaurants);
+restaurantRouter.get("/", RestaurantController.getRestaurants);
 
 restaurantRouter.get("/:id", RestaurantController.getRestaurantById);
 
-restaurantRouter.post("/", RestaurantController.createRestaurant);
+restaurantRouter.post(
+  "/",
+  authMiddleware,
+  RestaurantController.createRestaurant
+);
 
 restaurantRouter.put("/:id", RestaurantController.updateRestaurant);
 

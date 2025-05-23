@@ -1,6 +1,7 @@
 import { UserUpdateDTO } from "../models/User";
 import { Request, Response } from "express";
 import userService from "../services/UserService";
+import cartService from "../services/CartService";
 
 class UserController {
   public static _instance: UserController;
@@ -21,7 +22,8 @@ class UserController {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    return res.status(200).json(user);
+    const cart = await cartService.getCartByUserId(user._id.toString());
+    return res.status(200).json({ user, cart });
   }
 
   public async updateUserDetails(req: Request, res: Response): Promise<any> {

@@ -1,13 +1,19 @@
 import { Router } from "express";
 import orderController from "../controllers/OrderController";
+import paymentController from "../controllers/PaymentController";
 
 const orderRouter = Router();
 
-orderRouter.post("/", orderController.createOrder);
-orderRouter.get("/", orderController.getOrders);
-orderRouter.get("/:id", orderController.getOrderById);
-orderRouter.get("/user/:userId", orderController.getOrdersByUserId);
-orderRouter.put("/:id", orderController.updateOrder);
-orderRouter.delete("/:id", orderController.deleteOrder);
+orderRouter
+  .route("/")
+  .post(orderController.createOrder)
+  .get(orderController.getOrdersByUserId);
+
+orderRouter
+  .route("/:orderId")
+  .put(orderController.updateOrderStatus)
+  .delete(orderController.cancelOrder);
+
+orderRouter.route("/user/:userId").get(orderController.getOrdersByUserId);
 
 export default orderRouter;

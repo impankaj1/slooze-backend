@@ -1,15 +1,10 @@
 import { ZodError } from "zod";
-import {
-  FetchRestaurantDTO,
-  RestaurantCreateDTO,
-  RestaurantUpdateDTO,
-} from "../models/Restaurant";
-import {
-  FetchRestaurantSchema,
-  RestaurantCreateSchema,
-} from "../validators/RestaurantValidator";
+import { RestaurantCreateDTO, RestaurantUpdateDTO } from "../models/Restaurant";
+import { RestaurantCreateSchema } from "../validators/RestaurantValidator";
 import { Request, Response } from "express";
 import restaurantService from "../services/RestaurantService";
+import MenuItemsService from "../services/MenuItemsService";
+import { Role } from "../models/User";
 
 class RestaurantController {
   private static _instance: RestaurantController;
@@ -22,20 +17,7 @@ class RestaurantController {
   }
 
   public async getRestaurants(req: Request, res: Response): Promise<any> {
-    let data: FetchRestaurantDTO = req.body;
-
-    try {
-      data = FetchRestaurantSchema.parse(data);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        return res
-          .status(403)
-          .json({ message: error.errors.map((e) => e.message).join(", ") });
-      }
-      return res.status(500).json({ message: "Internal server error" });
-    }
-
-    const restaurants = await restaurantService.fetchRestaurants(data);
+    const restaurants = await restaurantService.fetchRestaurants();
     return res.status(200).json(restaurants);
   }
 
@@ -48,11 +30,24 @@ class RestaurantController {
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
-    return res.status(200).json(restaurant);
+    const menuItems = await MenuItemsService.getMenuItemsByRestaurantId(id);
+    return res.status(200).json({ restaurant, menuItems });
   }
 
   public async createRestaurant(req: Request, res: Response): Promise<any> {
     let data: RestaurantCreateDTO = req.body;
+
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    if (user.role !== Role.ADMIN) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to create restaurant" });
+    }
 
     try {
       data = RestaurantCreateSchema.parse(data);
@@ -76,6 +71,18 @@ class RestaurantController {
       return res.status(400).json({ message: "Id not provided" });
     }
 
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    if (user.role !== Role.ADMIN) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update restaurant" });
+    }
+
     const restaurant = await restaurantService.getRestaurantById(id);
 
     if (!restaurant) {
@@ -93,6 +100,12 @@ class RestaurantController {
     const { id } = req.params;
     if (!id) {
       return res.status(400).json({ message: "Id not provided" });
+    }
+
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ message: "User not authenticated" });
     }
     const restaurant = await restaurantService.getRestaurantById(id);
     if (!restaurant) {

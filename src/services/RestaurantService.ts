@@ -1,5 +1,4 @@
 import RestaurantModel, {
-  FetchRestaurantDTO,
   Restaurant,
   RestaurantCreateDTO,
   RestaurantUpdateDTO,
@@ -15,10 +14,8 @@ class RestaurantService {
     return this._instance;
   }
 
-  public async fetchRestaurants(
-    data: FetchRestaurantDTO
-  ): Promise<Restaurant[]> {
-    const restaurants = await RestaurantModel.find({ ...data });
+  public async fetchRestaurants(): Promise<Restaurant[]> {
+    const restaurants = await RestaurantModel.find();
 
     return restaurants.map((restaurant) => restaurant.toObject());
   }

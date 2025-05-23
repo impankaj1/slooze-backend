@@ -7,6 +7,7 @@ import { generateToken, refreshSecret, userResponse } from "../helpers";
 import userService from "../services/UserService";
 import { ZodError } from "zod";
 import { tokenService } from "../services/TokenService";
+import cartService from "../services/CartService";
 
 class AuthController {
   public static _instance: AuthController;
@@ -192,7 +193,8 @@ class AuthController {
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      return res.json(user);
+      const cart = await cartService.getCartByUserId(user._id.toString());
+      return res.json({ ...user, cart });
     } catch (error) {
       return res.status(500).json({ message: "Server error" });
     }

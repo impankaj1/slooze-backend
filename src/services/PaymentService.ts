@@ -27,6 +27,11 @@ class PaymentService {
     return payments.map((payment) => payment.toObject());
   }
 
+  public async getPaymentsByOrderIds(orderIds: string[]): Promise<Payment[]> {
+    const payments = await PaymentModel.find({ orderId: { $in: orderIds } });
+    return payments.map((payment) => payment.toObject());
+  }
+
   public async updatePayment(
     id: string,
     payment: PaymentUpdateDTO
@@ -48,11 +53,11 @@ class PaymentService {
   }
 
   public async updatePaymentStatus(
-    id: string,
+    paymentId: string,
     status: string
   ): Promise<Payment | null> {
     const payment = await PaymentModel.findByIdAndUpdate(
-      id,
+      paymentId,
       { status },
       { new: true }
     );

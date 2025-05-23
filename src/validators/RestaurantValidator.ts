@@ -2,15 +2,11 @@ import { MenuItemCreateSchema } from "./MenuValidator";
 import z from "zod";
 
 export const RestaurantCreateSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().min(1),
-  location: z.string().min(1),
-  menu: z.array(MenuItemCreateSchema),
-});
-
-export const FetchRestaurantSchema = z.object({
-  name: z.string().min(1).optional(),
-  location: z.string().min(1).optional(),
+  name: z.string(),
+  description: z.string(),
+  location: z.string(),
+  menu: z.array(MenuItemCreateSchema).optional()
+  ,
 });
 
 export const RestaurantUpdateSchema = RestaurantCreateSchema.partial();

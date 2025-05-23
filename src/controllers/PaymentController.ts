@@ -1,3 +1,4 @@
+import { Role } from "../models/User";
 import paymentService from "../services/PaymentService";
 import { Request, Response } from "express";
 class PaymentController {
@@ -15,15 +16,6 @@ class PaymentController {
     return res.status(200).json(payment);
   }
 
-  public async getPaymentById(req: Request, res: Response): Promise<any> {
-    const { id } = req.params;
-    if (!id) {
-      return res.status(400).json({ message: "Payment ID is required" });
-    }
-    const payment = await paymentService.getPaymentById(id);
-    return res.status(200).json(payment);
-  }
-
   public async getPaymentsByOrderId(req: Request, res: Response): Promise<any> {
     const { orderId } = req.params;
     if (!orderId) {
@@ -34,24 +26,36 @@ class PaymentController {
   }
 
   public async updatePayment(req: Request, res: Response): Promise<any> {
-    const { id } = req.params;
-    if (!id) {
+    const { paymentId } = req.params;
+    const user = req.user;  
+    if (!user) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+    if (user.role !== Role.ADMIN) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update payment" });
+    }
+    if (!paymentId) {
       return res.status(400).json({ message: "Payment ID is required" });
     }
-    const payment = await paymentService.getPaymentById(id);
+    const payment = await paymentService.getPaymentById(paymentId);
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" });
     }
-    const updatedPayment = await paymentService.updatePayment(id, req.body);
-    return res.status(200).json(updatedPayment);
+    const updatedPayment = await paymentService.updatePayment(
+      paymentId,
+      req.body
+    );
+    return res.status(200).json({ payment: updatedPayment });
   }
 
   public async deletePayment(req: Request, res: Response): Promise<any> {
-    const { id } = req.params;
-    if (!id) {
+    const { paymentId } = req.params;
+    if (!paymentId) {
       return res.status(400).json({ message: "Payment ID is required" });
     }
-    const deletedPayment = await paymentService.deletePayment(id);
+    const deletedPayment = await paymentService.deletePayment(paymentId);
     return res.status(200).json(deletedPayment);
   }
 

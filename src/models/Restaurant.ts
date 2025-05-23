@@ -1,9 +1,6 @@
 import MenuItemModel, { MenuItem } from "./MenuItems";
 import mongoose, { Types } from "mongoose";
-import {
-  RestaurantCreateSchema,
-  FetchRestaurantSchema,
-} from "../validators/RestaurantValidator";
+import { RestaurantCreateSchema } from "../validators/RestaurantValidator";
 import z from "zod";
 
 export interface Restaurant {
@@ -21,7 +18,7 @@ const RestaurantSchema = new mongoose.Schema(
     name: { type: String, required: true },
     description: { type: String, required: true },
     location: { type: String, required: true },
-    menuItemIds: { type: [String], required: true },
+    menuItemIds: { type: [String], default: [] },
   },
   { timestamps: true }
 );
@@ -33,5 +30,3 @@ export default RestaurantModel;
 export type RestaurantCreateDTO = z.infer<typeof RestaurantCreateSchema>;
 
 export type RestaurantUpdateDTO = Partial<RestaurantCreateDTO>;
-
-export type FetchRestaurantDTO = z.infer<typeof FetchRestaurantSchema>;
