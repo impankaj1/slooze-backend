@@ -1,9 +1,7 @@
-import OrderModel, {
-  Order,
-  OrderCreateDTO,
-  OrderStatus,
-} from "../models/Order";
-import { Cart } from "../models/Cart";
+import { Order, OrderCreateDTO, OrderStatus } from "../models/Order";
+import OrderModel from "../models/Order";
+import { Cart, CartItem } from "../models/Cart";
+import CartModel from "../models/Cart";
 
 class OrderService {
   public static _instance: OrderService;
@@ -15,10 +13,24 @@ class OrderService {
     return OrderService._instance;
   }
 
-  public async createOrder(cart: Cart, userId: string): Promise<Order> {
+  public async createOrder(
+    carts: Cart | Cart[],
+    userId: string
+  ): Promise<Order> {
+
+    const cartArray = Array.isArray(carts) ? carts : [carts];
+
+    const allItems = cartArray.reduce((acc, cart) => {
+      return [...acc, ...cart.items];
+    }, [] as CartItem[]);
+
+    const totalPrice = cartArray.reduce((acc, cart) => {
+      return acc + cart.totalPrice;
+    }, 0);
+
     const orderData: OrderCreateDTO = {
-      items: cart.items,
-      totalPrice: cart.totalPrice,
+      items: allItems,
+      totalPrice,
       status: OrderStatus.PENDING,
     };
 
@@ -26,6 +38,10 @@ class OrderService {
       ...orderData,
       userId,
     });
+
+    await Promise.all(
+      cartArray.map((cart) => CartModel.findByIdAndDelete(cart._id))
+    );
 
     return order;
   }

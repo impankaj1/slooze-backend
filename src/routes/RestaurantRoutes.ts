@@ -4,7 +4,7 @@ import authMiddleware from "../middleware";
 
 const restaurantRouter = Router();
 
-restaurantRouter.get("/", RestaurantController.getRestaurants);
+restaurantRouter.get("/", authMiddleware, RestaurantController.getRestaurants);
 
 restaurantRouter.get("/:id", RestaurantController.getRestaurantById);
 

@@ -3,6 +3,7 @@ import RestaurantModel, {
   RestaurantCreateDTO,
   RestaurantUpdateDTO,
 } from "../models/Restaurant";
+import { Role, User } from "../models/User";
 
 class RestaurantService {
   private static _instance: RestaurantService;
@@ -14,8 +15,14 @@ class RestaurantService {
     return this._instance;
   }
 
-  public async fetchRestaurants(): Promise<Restaurant[]> {
-    const restaurants = await RestaurantModel.find();
+  public async fetchRestaurants(user: User): Promise<Restaurant[]> {
+    let restaurants;
+    
+    if (user.role === Role.ADMIN) {
+      restaurants = await RestaurantModel.find();
+    } else {
+      restaurants = await RestaurantModel.find({ country: user.country });
+    }
 
     return restaurants.map((restaurant) => restaurant.toObject());
   }

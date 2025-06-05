@@ -1,4 +1,4 @@
-import User, { UserCreateDTO, UserLoginDTO } from "../models/User";
+import { UserCreateDTO, UserLoginDTO } from "../models/User";
 import { LoginSchema, SignupSchema } from "../validators/UserValidator";
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
@@ -110,6 +110,8 @@ class AuthController {
 
     await tokenService.createRefreshToken(refreshToken, user);
 
+    const cart = await cartService.getCartByUserId(user);
+
     return res
       .status(200)
       .cookie("refreshToken", refreshToken, {
@@ -118,7 +120,7 @@ class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: "/auth/refresh",
       })
-      .json({ token: accessToken, user: userResponse(user) });
+      .json({ token: accessToken, user: userResponse(user), cart });
   }
 
   public async refreshToken(req: Request, res: Response): Promise<any> {
@@ -183,6 +185,7 @@ class AuthController {
 
   public async logout(req: Request, res: Response): Promise<any> {
     res.clearCookie("refreshToken");
+
     return res.status(200).json({ message: "Logged out successfully" });
   }
 
@@ -193,7 +196,7 @@ class AuthController {
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      const cart = await cartService.getCartByUserId(user._id.toString());
+      const cart = await cartService.getCartByUserId(user);
       return res.json({ ...user, cart });
     } catch (error) {
       return res.status(500).json({ message: "Server error" });

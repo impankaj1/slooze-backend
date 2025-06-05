@@ -9,7 +9,7 @@ export const SignupSchema = z.object({
     .email("Please enter a valid email id")
     .nonempty("Email is required"),
   password: z.string().min(8, "Password should be at least 8 characters"),
-  location: z.string().min(1, "Location is required"),
+  country: z.string().min(1, "Country is required"),
   role: z.nativeEnum(Role),
 });
 

@@ -8,7 +8,7 @@ export interface Restaurant {
   name: string;
   description: string;
   menuItemIds: string[];
-  location: string;
+  country: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,7 +17,7 @@ const RestaurantSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     description: { type: String, required: true },
-    location: { type: String, required: true },
+    country: { type: String, required: true },
     menuItemIds: { type: [String], default: [] },
   },
   { timestamps: true }

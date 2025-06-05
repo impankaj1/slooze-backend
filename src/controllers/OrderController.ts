@@ -21,24 +21,25 @@ class OrderController {
       return res.status(401).json({ message: "User not authenticated" });
     }
     const userId = req.user._id.toString();
+    const user = req.user;
 
-    // Get user's cart
-    const cart = await cartService.getCartByUserId(userId);
-    if (!cart) {
-      return res.status(404).json({ message: "Cart is empty" });
+    const userCarts = await cartService.getCartByUserId(user);
+    if (!userCarts) {
+      return res.status(404).json({ message: "No carts found" });
     }
 
-    if (cart.items.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "Cannot create order with empty cart" });
+    // Convert to array if single cart
+    const carts = Array.isArray(userCarts) ? userCarts : [userCarts];
+
+    // Check if any cart has items
+    const hasItems = carts.some((cart) => cart.items.length > 0);
+    if (!hasItems) {
+      return res.status(400).json({ message: "All carts are empty" });
     }
 
     try {
-      // Create order
-      const order = await orderService.createOrder(cart, userId);
+      const order = await orderService.createOrder(carts, userId);
 
-      // Group items by restaurant
       const itemsByRestaurant = order.items.reduce((acc, item) => {
         const restaurantId = item.restaurantId;
         if (!acc[restaurantId]) {
@@ -62,7 +63,7 @@ class OrderController {
               status: PaymentStatus.PENDING,
               menuItemIds: items.map((item) => item.menuItem._id.toString()),
               restaurantId,
-              paymentMethod: PaymentMethod.CREDIT_CARD, // Default payment method, can be made configurable
+              paymentMethod: PaymentMethod.CREDIT_CARD,
             });
           }
         )

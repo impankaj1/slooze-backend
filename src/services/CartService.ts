@@ -9,6 +9,7 @@ import {
 import { CartCreateDTO } from "../models/Cart";
 import CartModel from "../models/Cart";
 import { MenuItem } from "../models/MenuItems";
+import { Role, User } from "../models/User";
 
 class CartService {
   public static _instance: CartService;
@@ -20,29 +21,38 @@ class CartService {
     return CartService._instance;
   }
 
-  public async createCart(cart: CartCreateDTO, userId: string): Promise<Cart> {
-    const newCart = await CartModel.create({ ...cart, userId });
+  public async createCart(cart: CartCreateDTO, user: User): Promise<Cart> {
+    const newCart = await CartModel.create({
+      ...cart,
+      userId: user._id.toString(),
+      country: user.country,
+    });
     return newCart;
   }
 
   public async getCart(id: string): Promise<Cart | null> {
-    const cart = await CartModel.findById(id);
+    const cart = await CartModel.findOne({ id: id });
     return cart;
   }
 
-  public async getCartByUserId(userId: string): Promise<Cart | null> {
-    const cart = await CartModel.findOne({ userId });
-    return cart;
+  public async getCartByUserId(user: User): Promise<Cart | Cart[] | null> {
+    if (user.role === Role.ADMIN) {
+      return await CartModel.find({});
+    }
+
+    return await CartModel.find({ country: user.country });
   }
 
   public async addItemToCart(
     id: string,
-    item: CartItemAddDTO
+    item: CartItemAddDTO,
+    user: User
   ): Promise<Cart | null> {
     const cart = await CartModel.findById(id);
-    if (!cart) {
-      throw new Error("Cart not found");
+    if (!cart || (user.role !== Role.ADMIN && cart.country !== user.country)) {
+      return null;
     }
+
     const existingItem = cart.items.find(
       (cartItem) =>
         cartItem.menuItem._id.toString() === item.menuItem._id.toString()
@@ -65,28 +75,34 @@ class CartService {
 
   public async updateCart(
     id: string,
-    payload: CartUpdateDTO
+    payload: CartUpdateDTO,
+    user: User
   ): Promise<Cart | null> {
-    const updatedCart = await CartModel.findByIdAndUpdate(id, payload, {
-      new: true,
-    });
-    return updatedCart;
+    const cart = await CartModel.findById(id);
+    if (!cart || (user.role !== Role.ADMIN && cart.country !== user.country)) {
+      return null;
+    }
+
+    return CartModel.findByIdAndUpdate(id, payload, { new: true });
   }
 
   public async removeItemFromCart(
     id: string,
-    itemId: string
+    itemId: string,
+    user: User
   ): Promise<Cart | null> {
     const cart = await CartModel.findById(id);
-    if (!cart) {
-      throw new Error("Cart not found");
+    if (!cart || (user.role !== Role.ADMIN && cart.country !== user.country)) {
+      return null;
     }
+
     const item = cart.items.find(
       (item) => item.menuItem._id.toString() === itemId
     );
     if (!item) {
-      throw new Error("Item not found");
+      return null;
     }
+
     cart.items = cart.items.filter(
       (item) => item.menuItem._id.toString() !== itemId
     );
@@ -96,18 +112,21 @@ class CartService {
 
   public async updateCartItem(
     cartId: Types.ObjectId,
-    payload: CartItemUpdateDTO
+    payload: CartItemUpdateDTO,
+    user: User
   ): Promise<Cart | null> {
     const cart = await CartModel.findById(cartId);
-    if (!cart) {
-      throw new Error("Cart not found");
+    if (!cart || (user.role !== Role.ADMIN && cart.country !== user.country)) {
+      return null;
     }
+
     const itemIndex = cart.items.findIndex(
       (item) => item.menuItem._id.toString() === payload.menuItem._id.toString()
     );
     if (itemIndex === -1) {
       return null;
     }
+
     const updatedItem: CartItem = {
       ...cart.items[itemIndex],
       ...payload,
@@ -119,10 +138,10 @@ class CartService {
     return cart.save();
   }
 
-  public async clearCart(userId: string): Promise<Cart | null> {
+  public async clearCart(userId: string, user: User): Promise<Cart | null> {
     const cart = await CartModel.findOne({ userId });
-    if (!cart) {
-      throw new Error("Cart not found");
+    if (!cart || (user.role !== Role.ADMIN && cart.country !== user.country)) {
+      return null;
     }
     cart.items = [];
     cart.totalPrice = 0;

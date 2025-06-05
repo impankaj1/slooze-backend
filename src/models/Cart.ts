@@ -27,6 +27,7 @@ export interface Cart {
   totalPrice: number;
   _id: Types.ObjectId;
   userId: string;
+  country: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +37,7 @@ const CartSchema = new mongoose.Schema(
     items: { type: [CartItemSchema], default: [] },
     totalPrice: { type: Number, required: true, default: 0 },
     userId: { type: String, required: true },
+    country: { type: String, required: true },
   },
   { timestamps: true }
 );

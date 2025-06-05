@@ -17,7 +17,7 @@ export interface User {
   role: string;
   createdAt: Date;
   updatedAt: Date;
-  location: string;
+  country: string;
 }
 
 const userModel = new mongoose.Schema(
@@ -40,7 +40,7 @@ const userModel = new mongoose.Schema(
       enum: Role,
       default: Role.MEMBER,
     },
-    location: {
+    country: {
       type: String,
       required: true,
     },

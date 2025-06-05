@@ -13,7 +13,12 @@ import orderRouter from "./routes/OrderRoutes";
 import cartRouter from "./routes/cartRoutes";
 import paymentRouter from "./routes/PaymentRoutes";
 const app = express();
-
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 
@@ -24,15 +29,6 @@ declare global {
     }
   }
 }
-
-app.use(
-  cors({
-    origin: ["https://slooze-frontend.vercel.app"],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
 
 app.use("/auth", authRouter);
 app.use("/restaurants", restaurantRouter);

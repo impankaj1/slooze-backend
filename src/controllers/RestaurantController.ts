@@ -17,7 +17,8 @@ class RestaurantController {
   }
 
   public async getRestaurants(req: Request, res: Response): Promise<any> {
-    const restaurants = await restaurantService.fetchRestaurants();
+    const user = req.user;
+    const restaurants = await restaurantService.fetchRestaurants(user);
     return res.status(200).json(restaurants);
   }
 

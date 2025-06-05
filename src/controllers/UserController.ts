@@ -22,7 +22,7 @@ class UserController {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const cart = await cartService.getCartByUserId(user._id.toString());
+    const cart = await cartService.getCartByUserId(user);
     return res.status(200).json({ user, cart });
   }
 
